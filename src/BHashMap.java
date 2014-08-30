@@ -48,7 +48,7 @@ public class BHashMap<K, V> {
 	public BHashMap() {
 		this.loadFactor = DEFAULT_LOAD_FACTOR;
 		this.threshold = DEFAULT_INITIAL_CAPACITY;
-		init();
+		initTable();
 	}
 
 	/**
@@ -86,7 +86,10 @@ public class BHashMap<K, V> {
 		return null;
 	}
 
-	private void init() {
+	/**
+	 * constructs an empty HashMap and initialize hash seed and cryptTable
+	 */
+	private void initTable() {
 		int capacity = DEFAULT_INITIAL_CAPACITY;
 		this.table = new Entry[capacity];
 		this.hashSeed = getRandom();
@@ -109,6 +112,9 @@ public class BHashMap<K, V> {
 		return 0;
 	}
 
+	/**
+	 * constructs a encrypt table with 1280(0x500) elements.
+	 */
 	private void initCryptTable() {
 		this.cryptTable = new long[0x500];
 		long seed = 0x00100001;
