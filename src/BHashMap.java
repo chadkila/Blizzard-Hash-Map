@@ -1,8 +1,9 @@
 import java.util.*;
-import java.util.Map.*;
 
 /**
- * 
+ * have to test 
+ * (int) (hashSeed * (1 << 8))
+ * (k = (String) e.key) == key || key.equals(k)
  */
 
 /**
@@ -26,7 +27,7 @@ public class BHashMap<K, V> {
 	private float hashSeed;
 
 	// reference table for hashing
-	private long cryptTable[];
+	private int cryptTable[];
 
 	// the default initial capacity
 	private final int DEFAULT_INITIAL_CAPACITY = 16;
@@ -63,7 +64,7 @@ public class BHashMap<K, V> {
 	/**
 	 * Tests if this hashtable maps no keys to values.
 	 * 
-	 * @return hash table is empty or not
+	 * @return hash tableK is empty or not
 	 */
 	public boolean isEmpty() {
 		return size == 0;
@@ -74,10 +75,22 @@ public class BHashMap<K, V> {
 		return null;
 	}
 
-	public V put(K key, V value) {
+	public V put(String key, V value) {
 		if (key == null || value == null) {
 			throw new NullPointerException();
 		}
+		int hash = hash(key);
+		int i = hash % table.length;
+		for (Entry<K, V> e = table[i]; e != null; e = e.next) {
+			String k;
+			if (e.hash == hash
+					&& ((k = (String) e.key) == key || key.equals(k))) {
+				V oldValue = e.value;
+				e.value = value;
+				return oldValue;
+			}
+		}
+		// addentry
 		return null;
 	}
 
@@ -96,39 +109,107 @@ public class BHashMap<K, V> {
 		initCryptTable();
 	}
 
+	/**
+	 * generates a random value falls between from 0f to 4f
+	 * 
+	 * @return hash seed
+	 */
 	private float getRandom() {
 		Random ran = new Random();
-		return ran.nextFloat() * 0.4f;
+		return ran.nextFloat() * 4.f;
 	}
 
-	private long hash(String key) {
-		long seed1 = 0x7FED7FED, seed2 = 0xEEEEEEEE;
+	/**
+	 * Uses MPQ hash algorithm to generate a long type variable as hashed value.
+	 * This version only accepts String.
+	 * 
+	 * @param key
+	 *            receive a string as key in hash map.
+	 * @return returns a long type argument as hashed value
+	 */
+	private int hash(String key) {
+		int seed1 = 0x7FED7FED, seed2 = 0xEEEEEEEE;
 		for (int i = 0; i < key.length(); i++) {
 			int ch = key.charAt(i);
 			seed1 = cryptTable[(int) (hashSeed * (1 << 8)) + ch]
 					^ (seed1 + seed2);
-			seed2 = (long) ch + seed1 + seed2 + (seed2 << 5) + 3L;
+			seed2 = ch + seed1 + seed2 + (seed2 << 5) + 3;
 		}
-		return 0;
+		return seed1;
 	}
 
 	/**
 	 * constructs a encrypt table with 1280(0x500) elements.
 	 */
 	private void initCryptTable() {
-		this.cryptTable = new long[0x500];
-		long seed = 0x00100001;
+		this.cryptTable = new int[0x500];
+		int seed = 0x00100001;
 		int index1 = 0, index2 = 0, i;
 		for (index1 = 0; index1 < 0x100; index1++) {
 			for (index2 = index1, i = 0; i < 5; i++, index2 += 0x100) {
-				long temp1, temp2;
-				seed = (seed * 125L + 3L) % 0x2AAAAB;
+				int temp1, temp2;
+				seed = (seed * 125 + 3) % 0x2AAAAB;
 				temp1 = (seed & 0xFFFF) << 0x10;
-				seed = (seed * 125L + 3L) % 0x2AAAAB;
+				seed = (seed * 125 + 3) % 0x2AAAAB;
 				temp2 = (seed & 0xFFFF);
 				cryptTable[index2] = (temp1 | temp2);
 			}
 		}
+	}
+
+	static class Entry<K, V> implements Map.Entry<K, V> {
+		final K key;
+		V value;
+		Entry<K, V> next;
+		long hash;
+
+		/**
+		 * Creates new entry.
+		 */
+		Entry(long h, K k, V v, Entry<K, V> n) {
+			value = v;
+			next = n;
+			key = k;
+			hash = h;
+		}
+
+		public final K getKey() {
+			return key;
+		}
+
+		public final V getValue() {
+			return value;
+		}
+
+		public final V setValue(V newValue) {
+			V oldValue = value;
+			value = newValue;
+			return oldValue;
+		}
+
+		public final boolean equals(Object o) {
+			if (!(o instanceof Map.Entry))
+				return false;
+			Map.Entry e = (Map.Entry) o;
+			Object k1 = getKey();
+			Object k2 = e.getKey();
+			if (k1 == k2 || (k1 != null && k1.equals(k2))) {
+				Object v1 = getValue();
+				Object v2 = e.getValue();
+				if (v1 == v2 || (v1 != null && v1.equals(v2)))
+					return true;
+			}
+			return false;
+		}
+
+		public final int hashCode() {
+			return Objects.hashCode(getKey()) ^ Objects.hashCode(getValue());
+		}
+
+		public final String toString() {
+			return getKey() + "=" + getValue();
+		}
+
 	}
 
 }
