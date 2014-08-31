@@ -80,7 +80,7 @@ public class BHashMap<K, V> {
 			throw new NullPointerException();
 		}
 		int hash = hash(key);
-		int i = hash % table.length;
+		int i = indexFor(hash, table.length);
 		for (Entry<K, V> e = table[i]; e != null; e = e.next) {
 			String k;
 			if (e.hash == hash
@@ -99,6 +99,49 @@ public class BHashMap<K, V> {
 		return null;
 	}
 
+	private void addEntry(int hash, String key, V value, int bucketIndex) {
+		if ((size >= threshold) && (null != table[bucketIndex])) {
+			resize(2 * table.length);
+			// hash
+		}
+
+		Entry<K, V> e = table[bucketIndex];
+		table[bucketIndex] = new Entry<K, V>(hash, key, value, e);
+		size++;
+	}
+
+	private void resize(int newCapacity) {
+		Entry[] oldTable = table;
+		int oldCapacity = oldTable.length;
+		if (oldCapacity == MAXIMUM_CAPACITY) {
+			threshold = Integer.MAX_VALUE;
+			return;
+		}
+
+		Entry[] newTable = new Entry[newCapacity];
+		transfer(newTable);
+		table = newTable;
+		threshold = (int) Math.min(newCapacity * loadFactor,
+				MAXIMUM_CAPACITY + 1);
+	}
+
+	private void transfer(Entry[] newTable) {
+		int newCapacity = newTable.length;
+		for (Entry<K, V> e : table) {
+			while (null != e) {
+				Entry<K, V> next = e.next;
+				int i = indexFor(e.hash, newCapacity);
+				e.next = newTable[i];
+				newTable[i] = e;
+				e = next;
+			}
+		}
+	}
+
+	private int indexFor(int hash, int length) {
+		return hash & (length - 1);
+	}
+
 	/**
 	 * constructs an empty HashMap and initialize hash seed and cryptTable
 	 */
@@ -110,13 +153,13 @@ public class BHashMap<K, V> {
 	}
 
 	/**
-	 * generates a random value falls between from 0f to 4f
+	 * generates a random value falls between from 0f to 3f
 	 * 
 	 * @return hash seed
 	 */
 	private float getRandom() {
 		Random ran = new Random();
-		return ran.nextFloat() * 4.f;
+		return ran.nextFloat() * 3.f;
 	}
 
 	/**
@@ -157,23 +200,23 @@ public class BHashMap<K, V> {
 		}
 	}
 
-	static class Entry<K, V> implements Map.Entry<K, V> {
-		final K key;
+	static class Entry<K, V> {
+		final String key;
 		V value;
 		Entry<K, V> next;
-		long hash;
+		int hash;
 
 		/**
 		 * Creates new entry.
 		 */
-		Entry(long h, K k, V v, Entry<K, V> n) {
+		Entry(int h, String k, V v, Entry<K, V> n) {
 			value = v;
 			next = n;
 			key = k;
 			hash = h;
 		}
 
-		public final K getKey() {
+		public String getKey() {
 			return key;
 		}
 
