@@ -1,9 +1,7 @@
 import java.util.*;
 
 /**
- * have to test 
- * (int) (hashSeed * (1 << 8))
- * (k = (String) e.key) == key || key.equals(k)
+ * 
  */
 
 /**
@@ -23,7 +21,7 @@ public class BHashMap<K, V> {
 	private int size;
 
 	// a randomized value applied to MPQ hash
-	// value falls between 0 to 4
+	// value falls between 0 to 3
 	private float hashSeed;
 
 	// reference table for hashing
@@ -64,7 +62,7 @@ public class BHashMap<K, V> {
 	/**
 	 * Tests if this hashtable maps no keys to values.
 	 * 
-	 * @return hash tableK is empty or not
+	 * @return hash table is empty or not
 	 */
 	public boolean isEmpty() {
 		return size == 0;
@@ -75,6 +73,18 @@ public class BHashMap<K, V> {
 		return null;
 	}
 
+	/**
+	 * Associates the specified value with the specified key in this map. If the
+	 * map previously contained a mapping for the key, the old value is
+	 * replaced.
+	 * 
+	 * @param key
+	 *            key with which the specified value is to be associated
+	 * @param value
+	 *            value to be associated with the specified key
+	 * @return the previous value associated with key, or null if there was no
+	 *         mapping for key.
+	 */
 	public V put(String key, V value) {
 		if (key == null || value == null) {
 			throw new NullPointerException();
@@ -82,15 +92,14 @@ public class BHashMap<K, V> {
 		int hash = hash(key);
 		int i = indexFor(hash, table.length);
 		for (Entry<K, V> e = table[i]; e != null; e = e.next) {
-			String k;
-			if (e.hash == hash
-					&& ((k = (String) e.key) == key || key.equals(k))) {
+			String k = e.key;
+			if (e.hash == hash && (k == key || key.equals(k))) {
 				V oldValue = e.value;
 				e.value = value;
 				return oldValue;
 			}
 		}
-		// addentry
+		addEntry(hash, key, value, i);
 		return null;
 	}
 
@@ -99,10 +108,23 @@ public class BHashMap<K, V> {
 		return null;
 	}
 
+	/**
+	 * Adds a new entry with the specified key, value and hash code to the
+	 * specified bucket.
+	 * 
+	 * @param hash
+	 *            hash code of the key
+	 * @param key
+	 *            key string of the key-value pair
+	 * @param value
+	 *            value object of the key-value pair
+	 * @param bucketIndex
+	 *            index of table array
+	 */
 	private void addEntry(int hash, String key, V value, int bucketIndex) {
 		if ((size >= threshold) && (null != table[bucketIndex])) {
 			resize(2 * table.length);
-			// hash
+			bucketIndex = indexFor(hash, table.length);
 		}
 
 		Entry<K, V> e = table[bucketIndex];
@@ -110,6 +132,18 @@ public class BHashMap<K, V> {
 		size++;
 	}
 
+	/**
+	 * Rehashes the contents of this map into a new array with a larger
+	 * capacity. This method is called automatically when the number of keys in
+	 * this map reaches its threshold.
+	 * 
+	 * If current capacity is MAXIMUM_CAPACITY, this method does not resize the
+	 * map, but sets threshold to Integer.MAX_VALUE. This has the effect of
+	 * preventing future calls.
+	 * 
+	 * @param newCapacity
+	 *            the new table's capacity
+	 */
 	private void resize(int newCapacity) {
 		Entry[] oldTable = table;
 		int oldCapacity = oldTable.length;
@@ -125,6 +159,9 @@ public class BHashMap<K, V> {
 				MAXIMUM_CAPACITY + 1);
 	}
 
+	/**
+	 * Transfers all entries from current table to newTable.
+	 */
 	private void transfer(Entry[] newTable) {
 		int newCapacity = newTable.length;
 		for (Entry<K, V> e : table) {
@@ -138,6 +175,14 @@ public class BHashMap<K, V> {
 		}
 	}
 
+	/**
+	 * Returns index for hash code h.
+	 * 
+	 * @param hash
+	 *            hash code of the key
+	 * @param length
+	 *            of table array
+	 */
 	private int indexFor(int hash, int length) {
 		return hash & (length - 1);
 	}
