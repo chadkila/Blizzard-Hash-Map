@@ -68,9 +68,19 @@ public class BHashMap<K, V> {
 		return size == 0;
 	}
 
+	/**
+	 * Returns the value to which the specified key is mapped, or null if this
+	 * map contains no mapping for the key.
+	 * 
+	 * @param key
+	 *            key string of the key-value pair
+	 */
 	public V get(String key) {
-		// TODO Auto-generated method stub
-		return null;
+		if (key == null) {
+			throw new NullPointerException();
+		}
+		Entry<K, V> entry = getEntry(key);
+		return null == entry ? null : entry.getValue();
 	}
 
 	/**
@@ -103,8 +113,77 @@ public class BHashMap<K, V> {
 		return null;
 	}
 
+	/**
+	 * Removes the mapping for the specified key from this map if present.
+	 * 
+	 * @param key
+	 *            key whose mapping is to be removed from the map
+	 * @return the previous value associated with key or null if there was no
+	 *         mapping for key.
+	 */
 	public V remove(String key) {
-		// TODO Auto-generated method stub
+		if (key == null) {
+			throw new NullPointerException();
+		}
+		Entry<K, V> e = removeEntryForKey(key);
+		return (e == null ? null : e.value);
+	}
+
+	/**
+	 * Removes all of the mappings from this map. The map will be empty after
+	 * this call returns.
+	 */
+	public void clear() {
+		Arrays.fill(table, null);
+		size = 0;
+	}
+
+	/**
+	 * Removes and returns the entry associated with the specified key in the
+	 * HashMap. Returns null if the HashMap contains no mapping for this key.
+	 */
+	private Entry<K, V> removeEntryForKey(String key) {
+		if (size == 0) {
+			return null;
+		}
+		int hash = hash(key);
+		int i = indexFor(hash, table.length);
+		Entry<K, V> prev = table[i];
+		Entry<K, V> e = prev;
+
+		while (e != null) {
+			Entry<K, V> next = e.next;
+			String k = e.key;
+			if (e.hash == hash && (k == key || key.equals(k))) {
+				size--;
+				if (prev == e)
+					table[i] = next;
+				else
+					prev.next = next;
+				return e;
+			}
+			prev = e;
+			e = next;
+		}
+
+		return e;
+	}
+
+	/**
+	 * Returns the entry associated with the specified key in the HashMap.
+	 * Returns null if the HashMap contains no mapping for the key.
+	 */
+	private Entry<K, V> getEntry(String key) {
+		if (size == 0) {
+			return null;
+		}
+
+		int hash = hash(key);
+		for (Entry<K, V> e = table[indexFor(hash, table.length)]; e != null; e = e.next) {
+			String k = e.key;
+			if (e.hash == hash && (k == key || key.equals(k)))
+				return e;
+		}
 		return null;
 	}
 
