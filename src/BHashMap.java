@@ -6,7 +6,7 @@ import java.util.*;
 
 /**
  * This class implements a hash map, which uses MPQ hashing algorithm. This
- * version only accpets String as a key and any object as value.
+ * version only accepts String as a key and any object as value.
  * 
  * @author yu
  * @see Map
